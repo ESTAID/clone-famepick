@@ -62,6 +62,8 @@ export default class App extends Component {
     const copyState = [...this.state.data];
     const selectedTask = copyState.find(s => s.id === selectedId);
 
+    if (this.state.indegree[selectedId] !== 0) return;
+
     selectedTask.completedAt =
       selectedTask.completedAt === null ? true : !selectedTask.completedAt;
 
