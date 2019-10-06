@@ -1,0 +1,94 @@
+[
+  {
+    "id": 0,
+    "group": "Purchases",
+    "task": "Wake up",
+    "dependencyIds": [],
+    "completedAt": null
+  },
+  {
+    "id": 1,
+    "group": "Purchases",
+    "task": "Go to the bank",
+    "dependencyIds": [0],
+    "completedAt": null
+  },
+  {
+    "id": 2,
+    "group": "Purchases",
+    "task": "Buy grill",
+    "dependencyIds": [
+      1
+    ],
+    "completedAt": null
+  },
+  {
+    "id": 3,
+    "group": "Purchases",
+    "task": "Buy charcoal",
+    "dependencyIds": [
+      1
+    ],
+    "completedAt": null
+  },
+  {
+    "id": 4,
+    "group": "Purchases",
+    "task": "Buy wings",
+    "dependencyIds": [
+      1
+    ],
+    "completedAt": null
+  },
+  {
+    "id": 5,
+    "group": "Purchases",
+    "task": "Buy beer",
+    "dependencyIds": [
+      1
+    ],
+    "completedAt": null
+  },
+  {
+    "id": 6,
+    "group": "BBQ",
+    "task": "Light it up",
+    "dependencyIds": [
+      2,
+      3,
+      4
+    ],
+    "completedAt": null
+  },
+  {
+    "id": 7,
+    "group": "BBQ",
+    "task": "Grill wings",
+    "dependencyIds": [
+      5,
+      6
+    ],
+    "completedAt": null
+  },
+  {
+    "id": 8,
+    "group": "BBQ",
+    "task": "Have a drink",
+    "dependencyIds": [5],
+    "completedAt": null
+  },
+  {
+    "id": 9,
+    "group": "BBQ",
+    "task": "Start Eating!",
+    "dependencyIds": [7],
+    "completedAt": null
+  },
+  {
+    "id": 10,
+    "group": "BBQ",
+    "task": "Take a break",
+    "dependencyIds": [],
+    "completedAt": null
+  }
+]
