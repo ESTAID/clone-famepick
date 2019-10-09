@@ -3,86 +3,104 @@ import './App.css';
 import getData from './api';
 import Header from './components/Header';
 import GroupList from './components/GroupList';
-import TaskList from './components/TaskList';
+import TodoList from './components/TodoList';
 
+import * as util from './utils';
 export default class App extends Component {
   state = {
-    data: [],
-    groups: [],
+    todos: [],
+    byGroups: [],
     dependencies: [],
     indegree: [],
-    title: 'Things To Do'
+    title: ''
   };
 
   componentDidMount() {
     getData().then(res => {
-      const groups = setGroups(res);
-      const indegree = setIndegree(res);
-      const dependencies = setDependencies(res);
-
       this.setState({
         ...this.state,
-        data: res,
-        groups,
-        indegree,
-        dependencies
+        todos: res,
+        byGroups: util.normalizeGroups(res),
+        indegree: util.setIndegree(res),
+        dependencies: util.setDependencies(res)
       });
     });
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(_, prevState) {
     console.log(this.state);
+    this.updateTitle(prevState);
   }
 
-  handleGroupNameClick = ev => {
-    const groupName = ev.target.value;
-    const groups = this.state.groups;
+  updateTitle = prevState => {
+    const { byGroups } = this.state;
 
-    groups.map(setAllClear).find(g => g.name === groupName).active = true;
+    if (!byGroups.length) {
+      return;
+    }
 
+    if (prevState.byGroups !== byGroups) {
+      const activeGroup = this.getActiveGroup();
+
+      this.setState({
+        ...this.state,
+        title: activeGroup ? activeGroup.name : 'Things To Do'
+      });
+    }
+  };
+
+  handleGroupNameClick = (group, index) => {
     this.setState({
       ...this.state,
-      title: groupName,
-      groups
+      byGroups: this.updateActiveGroup(index)
     });
   };
 
+  updateActiveGroup = index => {
+    const { byGroups } = this.state;
+    const copy = [...byGroups];
+
+    copy[index].active = true;
+
+    return copy;
+  };
+
   handleAllGroupsClick = () => {
-    const groups = this.state.groups;
+    const { byGroups } = this.state;
 
     this.setState({
       ...this.state,
-      groups: groups.map(setAllClear),
-      title: 'Things To Do'
+      byGroups: byGroups.map(util.setAllClear)
     });
   };
 
   handleTaskClick = task => {
-    const selectedId = Number(task.id);
-    const copyState = [...this.state.data];
-    const selectedTask = copyState.find(s => s.id === selectedId);
+    const { todos, indegree } = this.state;
+    const copyTodos = [...todos];
+    const selectedId = task.id;
+    const selectedTodo = copyTodos.find(todo => todo.id === selectedId);
+    const isLockTask = indegree[selectedId] !== 0;
 
-    if (this.state.indegree[selectedId] !== 0) return;
+    if (isLockTask) return;
 
-    selectedTask.completedAt =
-      selectedTask.completedAt === null ? true : !selectedTask.completedAt;
-
-    const indegree = this.computeIndegree(copyState, selectedId);
+    selectedTodo.completedAt =
+      selectedTodo.completedAt === null ? true : !selectedTodo.completedAt;
 
     this.setState({
       ...this.state,
-      data: copyState,
-      indegree
+      todos: copyTodos,
+      indegree: this.computeIndegree(copyTodos, selectedId)
     });
   };
 
-  computeIndegree = (state, id) => {
-    const copyIndegree = [...this.state.indegree];
-    const selectedDependency = this.state.dependencies[id];
+  computeIndegree = (todos, id) => {
+    const { indegree, dependencies } = this.state;
+    const copyIndegree = [...indegree];
+    const selectedDependency = dependencies[id];
 
     selectedDependency.forEach(dependency => {
       if (copyIndegree[dependency] > 0) {
-        if (state[id].completedAt === true) {
+        if (todos[id].completedAt === true) {
           copyIndegree[dependency] -= 1;
         } else {
           copyIndegree[dependency] += 1;
@@ -94,35 +112,32 @@ export default class App extends Component {
   };
 
   getActiveGroup = () => {
-    const activeGroup = this.state.groups.find(g => g.active);
-
-    if (activeGroup) {
-      return this.state.data.filter(d => d.group === activeGroup.name);
-    }
-
-    return [];
+    const activeGroup = this.state.byGroups.find(g => g.active);
+    return activeGroup ? activeGroup : false;
   };
+
+  getActiveTodos = activeGroup =>
+    this.state.todos.filter(todo => todo.group === activeGroup.name);
 
   render() {
     const activeGroup = this.getActiveGroup();
-    const hasActiveGroup = !!activeGroup.length;
 
     return (
       <div>
         <Header
           title={this.state.title}
           onClick={this.handleAllGroupsClick}
-          hasActiveGroup={hasActiveGroup}
+          hasActiveGroup={!!activeGroup}
         />
-        {hasActiveGroup ? (
-          <TaskList
-            tasks={activeGroup}
+        {activeGroup ? (
+          <TodoList
+            todos={this.getActiveTodos(activeGroup)}
             onClick={this.handleTaskClick}
             indegree={this.state.indegree}
           />
         ) : (
           <GroupList
-            groups={this.state.groups}
+            groups={this.state.byGroups}
             onClick={this.handleGroupNameClick}
           />
         )}
@@ -130,37 +145,3 @@ export default class App extends Component {
     );
   }
 }
-
-//utils
-const setGroups = data => {
-  const sortedGroupName = data.reduce((acc, curr) => {
-    return { ...acc, [curr.group]: true };
-  }, {});
-
-  return Object.keys(sortedGroupName).map(groupName => ({
-    name: groupName,
-    active: false
-  }));
-};
-
-const setDependencies = data => {
-  const dependencies = [];
-  for (let i = 0; i < data.length; i++) {
-    const ids = data[i].dependencyIds;
-    dependencies[i] = [];
-    for (let j = 0; j < ids.length; j++) {
-      dependencies[ids[j]].push(data[i].id);
-    }
-  }
-
-  return dependencies;
-};
-
-const setIndegree = data => {
-  return data.map(res => res.dependencyIds.length);
-};
-
-const setAllClear = group => {
-  group.active = false;
-  return group;
-};

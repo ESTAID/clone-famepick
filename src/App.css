@@ -1,27 +1,3 @@
-.task {
-  border-color: white;
-}
-
-.lock {
-  background: url('/locked.svg');
-  background-repeat: no-repeat;
-  width: 20px;
-  height: 20px;
-  display: inline-block;
-}
-
-.incompleted {
-  background: url('/incomplete.svg');
-  background-repeat: no-repeat;
-  width: 20px;
-  height: 20px;
-  display: inline-block;
-}
-
-.completed {
-  background: url('/completed.svg');
-  background-repeat: no-repeat;
-  width: 20px;
-  height: 20px;
-  display: inline-block;
+body {
+  margin: 0px 20px;
 }
